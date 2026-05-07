@@ -1,0 +1,327 @@
+{
+  "info": {
+    "_postman_id": "0862f442-a8ee-4b4c-8288-836a57248bc2",
+    "name": "Paylocity Benefits API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50452212",
+    "_collection_link": "https://go.postman.co/collection/50452212-0862f442-a8ee-4b4c-8288-836a57248bc2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Scenario 1: Add Employee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function (){",
+              "    pm.response.to.have.status(200);",
+              "    });",
+              "",
+              "const employeeData = pm.response.json(); ",
+              "",
+              "pm.collectionVariables.set(\"employeeId\", employeeData.id);",
+              "",
+              "pm.test(\"Verify Per-Paycheck Calculations (2 Dependents)\", function () {",
+              "    const paychecks = 26;",
+              "    const perCheckGross = 2000.00;",
+              "    const dependantsCalculationCost = (employeeData.dependants * 500) / paychecks;",
+              "    ",
+              "    const benefitsCosts = (1000 / paychecks) + dependantsCalculationCost;",
+              "",
+              "    const expectedNetPay = perCheckGross - benefitsCosts;",
+              "",
+              "    pm.expect(employeeData.gross.toFixed(2)).to.eql(perCheckGross.toFixed(2));",
+              "    pm.expect(employeeData.benefitsCost.toFixed(2)).to.eql(benefitsCosts.toFixed(2));",
+              "    pm.expect(employeeData.net.toFixed(2)).to.eql(expectedNetPay.toFixed(2));",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Basic VGVzdFVzZXI5NjE6TzBeR105Q2Q4Tnxr"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"firstName\": \"Wally\",\n    \"lastName\": \"West\",\n    \"dependants\": 1,\n    \"username\": \"TestUser961\"\n}\n"
+        },
+        "url": {
+          "raw": "https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/api/Employees",
+          "protocol": "https",
+          "host": [
+            "wmxrwq14uc",
+            "execute-api",
+            "us-east-1",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            "Prod",
+            "api",
+            "Employees"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Scenario 2: Get All Employees",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200)",
+              "});",
+              "",
+              "const employeeListData = pm.response.json();",
+              "const savedId = pm.collectionVariables.get(\"employeeId\");",
+              "",
+              "pm.test(\"Verify TestUser961 is in the dashboard\", function () {",
+              "    let employeeFound = null;",
+              "    for (let i = 0; i < employeeListData.length; i++){",
+              "        if(employeeListData[i].id === savedId){",
+              "            employeeFound = employeeListData[i];",
+              "            break;",
+              "        }",
+              "    }",
+              "",
+              "    pm.expect(employeeFound).to.not.be.undefined;",
+              "    pm.expect(employeeFound.username).to.eql(\"TestUser961\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "packages": {},
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Basic VGVzdFVzZXI5NjE6TzBeR105Q2Q4Tnxr"
+          }
+        ],
+        "url": {
+          "raw": "https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/api/Employees",
+          "protocol": "https",
+          "host": [
+            "wmxrwq14uc",
+            "execute-api",
+            "us-east-1",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            "Prod",
+            "api",
+            "Employees"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Scenario 3: Get Individual Employee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200)",
+              "});",
+              "",
+              "const employeeData = pm.response.json();",
+              "pm.test(\"Verify correct employee record\", function () {",
+              "    pm.expect(employeeData.username).to.eql(\"TestUser961\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Basic VGVzdFVzZXI5NjE6TzBeR105Q2Q4Tnxr"
+          }
+        ],
+        "url": {
+          "raw": "https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/api/Employees/{{employeeId}}",
+          "protocol": "https",
+          "host": [
+            "wmxrwq14uc",
+            "execute-api",
+            "us-east-1",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            "Prod",
+            "api",
+            "Employees",
+            "{{employeeId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Scenario 4: Edit Employee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const jsonData = pm.response.json();",
+              "",
+              "pm.test(\"Verify Recalculation for 1 Dependent\", function () {",
+              "",
+              "    const paychecks = 26;",
+              "    const salary = 2000.00;",
+              "    const dependantsCalculationCost = (jsonData.dependants * 500) / paychecks;",
+              "    const expectedBenefits = (1000 / paychecks) + dependantsCalculationCost;",
+              "    ",
+              "    const expectedNetPay = salary - expectedBenefits;",
+              "",
+              "    pm.expect(jsonData.firstName).to.eql(\"Jane-Updated\");",
+              "    pm.expect(jsonData.benefitsCost.toFixed(2)).to.eql(expectedBenefits.toFixed(2));",
+              "    pm.expect(jsonData.net.toFixed(2)).to.eql(expectedNetPay.toFixed(2));",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Basic VGVzdFVzZXI5NjE6TzBeR105Q2Q4Tnxr"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"id\": \"{{employeeId}}\",\n    \"firstName\": \"Clark\",\n    \"lastName\": \"Kent\",\n    \"dependants\": 12,\n    \"username\": \"TestUser961\"\n}"
+        },
+        "url": {
+          "raw": "https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/api/Employees",
+          "protocol": "https",
+          "host": [
+            "wmxrwq14uc",
+            "execute-api",
+            "us-east-1",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            "Prod",
+            "api",
+            "Employees"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Scenario 5: Delete Employee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - Employee deleted succesfully\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const idDeleted = pm.collectionVariables.get(\"employeeId\");\r",
+              "console.log(\"Request for deletion of employee with ID \" + idDeleted);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "packages": {},
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Basic VGVzdFVzZXI5NjE6TzBeR105Q2Q4Tnxr"
+          }
+        ],
+        "url": {
+          "raw": "https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/api/Employees/{{employeeId}}\t",
+          "protocol": "https",
+          "host": [
+            "wmxrwq14uc",
+            "execute-api",
+            "us-east-1",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            "Prod",
+            "api",
+            "Employees",
+            "{{employeeId}}\t"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "employeeId",
+      "value": ""
+    }
+  ]
+}
