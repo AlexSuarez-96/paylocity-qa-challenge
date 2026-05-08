@@ -22,16 +22,42 @@ const expectedData = {
 test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(
-      `https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/Account/LogIn`,
+      "https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/Account/LogIn",
     );
 
-    await page.getByLabel(`Username`).fill(`TestUser961`);
-    await page.getByLabel(`Password`).fill(`O0^G]9Cd8N|k`);
+    await expect(page.getByLabel("Username")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByLabel("Password")).toBeVisible({ timeout: 10000 });
 
-    await page.getByRole(`button`, { name: `Log In` }).click();
+    await page.getByLabel("Username").fill("TestUser961");
+    await page.getByLabel("Password").fill("O0^G]9Cd8N|k");
+
+    await expect(page.getByLabel("Username")).toHaveValue("TestUser961", {
+      timeout: 15000,
+    });
+    await expect(page.getByLabel("Password")).toHaveValue("O0^G]9Cd8N|k", {
+      timeout: 15000,
+    });
+
+    await page.getByRole("button", { name: "Log In" }).click();
+
+    await expect(page.getByLabel("Username")).toBeHidden({ timeout: 10000 });
+    await expect(page.getByLabel("Password")).toBeHidden({ timeout: 10000 });
+
     await expect(page).toHaveURL(
-      `https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/Benefits`,
+      "https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/Benefits",
     );
+
+    await page.waitForLoadState("networkidle");
+
+    await page.waitForSelector("#employeesTable tbody", {
+      state: "visible",
+      timeout: 20000,
+    });
+
+    await page.waitForSelector("#employeesTable tbody tr", {
+      state: "visible",
+      timeout: 20000,
+    });
   });
 
   test(`B-001 UI - Inverted data display in the columns First Name and Last Name`, async ({
@@ -75,6 +101,7 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
   });
 
   test(`B-003 UI - Duplicate records in the Benefits Dashboard`, async ({
+    //Precondition: created a Frank Castle employee before
     page,
   }) => {
     const firstNameOriginal = "Frank";
@@ -105,8 +132,8 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
     await page.getByRole(`button`, { name: `Add Employee` }).click();
 
     const longFirstName =
-      "Diego María de la Concepción Juan Nepomuceno Estanislao";
-    const longLastName = "de la Rivera y Barrientos Acosta y Rodríguez";
+      "Pablo Diego José Francisco de Paula Juan Nepomuceno Crispín Crispiniano María Remedios de la Santísima Trinidad";
+    const longLastName = "Ruiz y Picasso";
     const dependantsOfLongName = "4";
 
     await page
@@ -148,10 +175,9 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
     ).toBeVisible();
   });
 
-  test(`B-006 UI - Session Management Timeout Blocker`, async ({
-    page,
-    context,
-  }) => {
+  test(`B-006 UI - Session Management Timeout Blocker`, async ({ page }) => {
+    test.setTimeout(15 * 60 * 1000);
+
     await page.getByRole(`button`, { name: `Add Employee` }).click();
 
     const firstSMFirstName = "Bruce";
@@ -171,18 +197,15 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
     await page
       .locator(`input[name="dependants"]`)
       .pressSequentially(firstDependantsSM);
-    await page.locator(`#addEmployee`).click({ force: true });
+    await page.locator(`#addEmployee`).click();
 
-    await expect(page.locator(".modal-content")).not.toBeVisible(); // line added to allow the process to finish before clearing cookies
-    await page.waitForTimeout(5 * 60 * 1000);
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(12 * 60 * 1000);
 
-    await expect(addButton).toBeVisible({ timeout: 10000 });
-    await expect(addButton).toBeEnabled({ timeout: 10000 });
+    const addEmployeeBtn = page.getByRole(`button`, { name: `Add Employee` });
+    await expect(addEmployeeBtn).toBeVisible({ timeout: 10000 });
+    await expect(addEmployeeBtn).toBeEnabled({ timeout: 10000 });
 
-    await page
-      .getByRole(`button`, { name: `Add Employee` })
-      .click({ force: true });
+    await addEmployeeBtn.click();
 
     await page
       .locator(`input[name="firstName"]`)
@@ -192,11 +215,85 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
       .pressSequentially(secondSMLastName);
     await page
       .locator(`input[name="dependants"]`)
-      .pressSequentially(secondDependantsSM);
+      .pressSequentially(secondDependantSM);
+
     await page.locator(`#addEmployee`).click({ force: true });
 
-    await expect(
-      page.getByRole(`row`, { name: secondSMFirstName }),
-    ).toBeVisible();
+    await expect(page.getByRole(`row`, { name: `Talia` })).toBeVisible({
+      timeout: 5000,
+    });
+  });
+  test(`Happy Path: Add Employee`, async ({ page }) => {
+    await page.getByRole(`button`, { name: `Add Employee` }).click();
+
+    const happyFirstNameAdd = "Diana";
+    const happyLastNameAdd = "Prince";
+    const happyDependantsAdd = "2";
+
+    const firstNameInput = page.locator('input[name="firstName"]');
+    await firstNameInput.pressSequentially(happyFirstNameAdd);
+
+    const lastNameInput = page.locator('input[name="lastName"]');
+    await lastNameInput.pressSequentially(happyLastNameAdd);
+
+    const dependantsInput = page.locator('input[name="dependants"]');
+    await dependantsInput.pressSequentially(happyDependantsAdd);
+    await page.locator("#addEmployee").click();
+
+    await expect(page.locator(`#employeesTable tbody`)).toContainText(`Diana`);
+  });
+
+  test(`Happy Path: Edit Employee`, async ({ page }) => {
+    await page.getByRole(`button`, { name: `Add Employee` }).click();
+
+    const firstNameEditEmployee = "Thor";
+    const lastNameEditEmployee = "Odinson";
+    const dependantEditEmployee = "0";
+    const firstNameUnmasked = "Loki";
+
+    const firstNameInput = page.locator('input[name="firstName"]');
+    await firstNameInput.pressSequentially(firstNameEditEmployee);
+
+    const lastNameInput = page.locator('input[name="lastName"]');
+    await lastNameInput.pressSequentially(lastNameEditEmployee);
+
+    const dependantsInput = page.locator('input[name="dependants"]');
+    await dependantsInput.pressSequentially(dependantEditEmployee);
+    await page.locator("#addEmployee").click();
+
+    await expect(page.locator(`#employeesTable tbody`)).toContainText(
+      firstNameEditEmployee,
+    );
+
+    const row = page
+      .locator("#employeesTable tbody tr")
+      .filter({ hasText: firstNameEditEmployee });
+    await expect(row).toBeVisible({ timeout: 10000 });
+    await expect(row).toContainText(firstNameEditEmployee);
+
+    await row.locator(".fa-edit").click();
+
+    const editFirstNameInput = page.locator('input[name="firstName"]');
+    await editFirstNameInput.clear();
+    await editFirstNameInput.pressSequentially(firstNameUnmasked);
+    await page.locator("#updateEmployee").click();
+
+    await expect(page.locator(`#employeesTable tbody`)).toContainText(
+      firstNameUnmasked,
+    );
+  });
+
+  test(`Happy Path: Delete Employee`, async ({ page }) => {
+    // Precondition: Be sure to have run first the Test of Edit Employee
+    const deleteEmployee = "Loki";
+    const row = page
+      .locator("#employeesTable tbody tr")
+      .filter({ hasText: deleteEmployee });
+    await row.locator(".fa-times").click();
+    const deleteConfirmBtn = page.locator("#deleteEmployee");
+    await deleteConfirmBtn.click();
+    await expect(page.locator("#employeesTable tbody")).not.toContainText(
+      deleteEmployee,
+    );
   });
 });
