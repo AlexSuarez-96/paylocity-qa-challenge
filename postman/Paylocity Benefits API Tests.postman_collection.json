@@ -15,22 +15,23 @@
           "script": {
             "exec": [
               "pm.test(\"Status code is 200\", function (){",
-              "    pm.response.to.have.status(200);",
-              "    });",
+              "    pm.response.to.have.status(200); ",
+              "    }); //Sanity Check: verify we recieved a code 200//",
               "",
               "const employeeData = pm.response.json(); ",
               "",
-              "pm.collectionVariables.set(\"employeeId\", employeeData.id);",
+              "pm.collectionVariables.set(\"employeeId\", employeeData.id); //Creation of a variable employeeId that we are gonna use later in other requests//",
               "",
-              "pm.test(\"Verify Per-Paycheck Calculations (2 Dependents)\", function () {",
+              "pm.test(\"Verify Per-Paycheck Calculations\", function () {",
               "    const paychecks = 26;",
               "    const perCheckGross = 2000.00;",
-              "    const dependantsCalculationCost = (employeeData.dependants * 500) / paychecks;",
+              "    const dependantsCalculationCost = (employeeData.dependants * 500) / paychecks; //Calculation based on dependants qty//",
               "    ",
-              "    const benefitsCosts = (1000 / paychecks) + dependantsCalculationCost;",
+              "    const benefitsCosts = (1000 / paychecks) + dependantsCalculationCost; //Cost of the benefits//",
               "",
-              "    const expectedNetPay = perCheckGross - benefitsCosts;",
+              "    const expectedNetPay = perCheckGross - benefitsCosts; //Salary after deductions//",
               "",
+              "//Comparison of data to match the expected values//",
               "    pm.expect(employeeData.gross.toFixed(2)).to.eql(perCheckGross.toFixed(2));",
               "    pm.expect(employeeData.benefitsCost.toFixed(2)).to.eql(benefitsCosts.toFixed(2));",
               "    pm.expect(employeeData.net.toFixed(2)).to.eql(expectedNetPay.toFixed(2));",
@@ -84,13 +85,18 @@
           "listen": "test",
           "script": {
             "exec": [
+              "//Test to see the full dashboard with all employees//",
+              "//Sanity Check: verify we recieved a code 200//",
               "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200)",
+              "    pm.response.to.have.status(200);",
               "});",
               "",
+              "//Here we get all the employees in the list//",
               "const employeeListData = pm.response.json();",
-              "const savedId = pm.collectionVariables.get(\"employeeId\");",
+              "//Here we use the employeeId we created in POST//",
+              "const savedId = pm.collectionVariables.get(\"employeeId\"); ",
               "",
+              "//Validation to check if a employee created by TestUser961 is in the list//",
               "pm.test(\"Verify TestUser961 is in the dashboard\", function () {",
               "    let employeeFound = null;",
               "    for (let i = 0; i < employeeListData.length; i++){",
@@ -99,8 +105,8 @@
               "            break;",
               "        }",
               "    }",
-              "",
-              "    pm.expect(employeeFound).to.not.be.undefined;",
+              "//Verify employee value is not null and the username match the user who created the employee//",
+              "    pm.expect(employeeFound).to.not.be.null;",
               "    pm.expect(employeeFound.username).to.eql(\"TestUser961\");",
               "});"
             ],
@@ -112,8 +118,12 @@
         {
           "listen": "prerequest",
           "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
             "packages": {},
-            "type": "text/javascript"
+            "requests": {}
           }
         }
       ],
@@ -151,13 +161,15 @@
           "listen": "test",
           "script": {
             "exec": [
+              "//Test to lookup for a specific employee using the employeeId//",
+              "//Sanity Check: verify we recieved a code 200//",
               "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200)",
+              "    pm.response.to.have.status(200);",
               "});",
-              "",
+              "//Here we get all the data of the specific employee//",
               "const employeeData = pm.response.json();",
               "pm.test(\"Verify correct employee record\", function () {",
-              "    pm.expect(employeeData.username).to.eql(\"TestUser961\");",
+              "    pm.expect(employeeData.username).to.eql(\"TestUser961\"); //We use TestUser961 id as a beacon//",
               "});"
             ],
             "type": "text/javascript",
@@ -201,13 +213,16 @@
           "listen": "test",
           "script": {
             "exec": [
+              "//Test to check the system when we made an edit of an employee//",
+              "//Sanity Check: verify we recieved a code 200//",
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "});",
               "",
+              "//Sanity check: verify the response of the JSON and saved it in a variable//",
               "const jsonData = pm.response.json();",
               "",
-              "pm.test(\"Verify Recalculation for 1 Dependent\", function () {",
+              "pm.test(\"Verify Recalculation\", function () {",
               "",
               "    const paychecks = 26;",
               "    const salary = 2000.00;",
@@ -216,7 +231,8 @@
               "    ",
               "    const expectedNetPay = salary - expectedBenefits;",
               "",
-              "    pm.expect(jsonData.firstName).to.eql(\"Jane-Updated\");",
+              "//Verify the response is updated//",
+              "    pm.expect(jsonData.firstName).to.eql(\"Clark\");",
               "    pm.expect(jsonData.benefitsCost.toFixed(2)).to.eql(expectedBenefits.toFixed(2));",
               "    pm.expect(jsonData.net.toFixed(2)).to.eql(expectedNetPay.toFixed(2));",
               "});"
@@ -269,10 +285,13 @@
           "listen": "test",
           "script": {
             "exec": [
+              "//Test to check the correct management of an employee when the register is deleted//\r",
+              "//Sanity Check: verify we recieved a code 200//\r",
               "pm.test(\"Status code is 200 - Employee deleted succesfully\", function () {\r",
               "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
+              "//We catch the employee we want to delete from the URL//\r",
               "const idDeleted = pm.collectionVariables.get(\"employeeId\");\r",
               "console.log(\"Request for deletion of employee with ID \" + idDeleted);"
             ],
@@ -284,8 +303,12 @@
         {
           "listen": "prerequest",
           "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
             "packages": {},
-            "type": "text/javascript"
+            "requests": {}
           }
         }
       ],

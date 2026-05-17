@@ -71,6 +71,7 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
   test(`B-001 UI - Inverted data display in the columns First Name and Last Name`, async ({
     page,
   }) => {
+    test.fail(); //We expect the test to fail but pass the CI/CD validation
     const row = page.getByRole(`row`, {
       //Locate the specific row using the unique ID from expected dataset
       name: expectedData.ID,
@@ -90,13 +91,14 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
       `The value of the Column Last Name in the Dashboard is: ${lastNameColumnValue}`,
     );
     console.log(
-      `The value of the Column Fast Name in the Dashboard is: ${firstNameColumnValue}`,
+      `The value of the Column First Name in the Dashboard is: ${firstNameColumnValue}`,
     );
   });
 
   test(`B-002 Security - Authentication bypass via Paylocity Benefits Dashboard link in Login Page`, async ({
     page,
   }) => {
+    test.fail(); //We expect the test to fail but pass the CI/CD validation
     await page.goto(
       `https://wmxrwq14uc.execute-api.us-east-1.amazonaws.com/Prod/Account/LogIn`,
     );
@@ -115,6 +117,8 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
   test(`B-003 UI - Duplicate records in the Benefits Dashboard`, async ({
     page,
   }) => {
+    test.fail(); //We expect the test to fail but pass the CI/CD validation
+
     const firstNameOriginal = "Frank";
     const secondNameOriginal = "Castle";
     const dependantsOriginal = "0";
@@ -143,6 +147,8 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
   test(`B-004 UI - Missing error message / alert in First Name / Last Name fields`, async ({
     page,
   }) => {
+    test.fail(); //We expect the test to fail but pass the CI/CD validation
+
     await page.getByRole(`button`, { name: `Add Employee` }).click();
 
     //Boundary Value Test: Testing the UI with a long name
@@ -170,6 +176,8 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
   test(`B-005 UI - The system blocks the input without validating it or indicating the allowed limit to the user in Dependants fields`, async ({
     page,
   }) => {
+    test.fail(); //We expect the test to fail but pass the CI/CD validation
+
     await page.getByRole(`button`, { name: `Add Employee` }).click();
 
     //Boundary Value Test: Testing the UI with big quantity of dependants
@@ -196,6 +204,8 @@ test.describe(`Test Suite for Paylocity Benefits Dashboard`, () => {
 
   // Test to simulate user away from keyboard, set a Timeout to simulate that condition
   test(`B-006 UI - Session Management Timeout Blocker`, async ({ page }) => {
+    test.fail(); //We expect the test to fail but pass the CI/CD validation
+
     test.setTimeout(15 * 60 * 1000); // Set a timeout margin of 15 min to interact with UI and simulate afk of 12 min
 
     await page.getByRole(`button`, { name: `Add Employee` }).click();
